@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/juju/deputy"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"text/template"
 )
 
 var (
@@ -17,23 +20,26 @@ var (
 
 func main() {
 	log.SetPrefix("docker-build: ")
-	flag.StringVar(&configFile, "file", "docker-build.yaml", "Specify an alternate build file (default: docker-build.yml)")
-	flag.StringVar(&configFile, "f", "docker-build.yaml", "Specify an alternate build file (default: docker-build.yml)")
+	flag.StringVar(&configFile, "file", "docker-build.yml", "Specify an alternate build file (default: docker-build.yml)")
+	flag.StringVar(&configFile, "f", "docker-build.yml", "Specify an alternate build file (default: docker-build.yml)")
 	flag.Parse()
 	config, err := readConfig()
 	if err != nil {
+		log.Println(err)
 		os.Exit(1)
 	}
 
-	log.Println(config.variables)
+	b, err := config.build()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 
-	// b, err := config.build()
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return nil, err
-	// }
-
-	// log.Println(string(b))
+	if err := ioutil.WriteFile("docker-compose.yml", b, 0644); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("docker-compose.yml written to current directory")
 }
 
 type Variable struct {
@@ -57,17 +63,15 @@ func readConfig() (*Config, error) {
 
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
 	err = yaml.Unmarshal(b, &config)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		return nil, err
 	}
 
 	if err := validateConfig(config); err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -124,10 +128,45 @@ func execute(cmd string) (string, error) {
 	return value, nil
 }
 
-// func (config *Config) build() (string, error) {
-// 	b := bytes.NewBuffer(nil)
+func (config *Config) build() ([]byte, error) {
+	b := bytes.NewBuffer(nil)
 
-// 	for name, brick := range config.Bricks {
-// 		brick.File
-// 	}
-// }
+	for name, brick := range config.Bricks {
+		f, err := ioutil.ReadFile(brick.File)
+		if err != nil {
+			return nil, err
+		}
+
+		t, err := template.New(name).Parse(string(f))
+		if err != nil {
+			return nil, err
+		}
+
+		if err := t.Execute(b, config.variables); err != nil {
+			return nil, err
+		}
+
+		if len(brick.Links) > 0 {
+			l, err := yaml.Marshal(map[string][]string{
+				"links": brick.Links,
+			})
+			if err != nil {
+				return nil, err
+			}
+			l = bytes.Replace(l, []byte("\n"), []byte("\n   "), len(brick.Links))
+
+			if _, err := b.WriteString("\n  "); err != nil {
+				return nil, err
+			}
+			if _, err := b.Write(l); err != nil {
+				return nil, err
+			}
+		} else {
+			if _, err := b.WriteString("\n"); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return b.Bytes(), nil
+}
