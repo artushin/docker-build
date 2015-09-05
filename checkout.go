@@ -10,15 +10,15 @@ import (
 )
 
 type Container struct {
-	Links     []string
-	File      string
-	Variables []string
+	Links     []string `yaml:"links,omitempty"`
+	File      string   `yaml:"file,omitempty"`
+	Variables []string `yaml:"variables,omitempty"`
 }
 
 type NodeConfig struct {
-	Variables  map[string]*Variable
+	Variables  map[string]*Variable `yaml:"variables,omitempty"`
 	variables  map[string]string
-	Containers map[string]*Container
+	Containers map[string]*Container `yaml:"containers,omitempty"`
 }
 
 func checkout(build, node string) {
@@ -55,6 +55,8 @@ func checkout(build, node string) {
 	if err := ioutil.WriteFile("docker-compose.yaml", b, 0644); err != nil {
 		validation("Unable to write docker-compose.yaml file:", err.Error())
 	}
+
+	done("Wrote docker-compose.yaml for build", build, "node", node)
 }
 
 func readNodeConfig(configFile string) (*NodeConfig, error) {

@@ -8,9 +8,9 @@ import (
 )
 
 type BuildConfig struct {
-	Variables map[string]*Variable
+	Variables map[string]*Variable `yaml:"variables,omitempty"`
 	variables map[string]string
-	Nodes     map[string]*NodeConfig
+	Nodes     map[string]*NodeConfig `yaml:"nodes,omitempty"`
 }
 
 func make(build string) {
@@ -23,7 +23,7 @@ func make(build string) {
 		validation("Invalid build argument", err.Error())
 	}
 
-	if _, err := os.Stat(filename); !os.IsNotExist(err) {
+	if _, err := os.Stat(dirName); !os.IsNotExist(err) {
 		validation("Build", build, "already exists. Run \"docker-build remove", build, "\" if first to remove it.")
 	}
 
@@ -56,7 +56,7 @@ func make(build string) {
 		validation("Unable to build node configs", err.Error())
 	}
 
-	if err := os.Mkdir(dirName, 0644); err != nil {
+	if err := os.MkdirAll(dirName, 0755); err != nil {
 		validation("Unable to create build directory", err.Error())
 	}
 

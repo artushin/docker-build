@@ -28,8 +28,8 @@ func done(str ...interface{}) {
 }
 
 type Variable struct {
-	Cmd   string
-	Value string
+	Cmd   string `yaml:"cmd,omitempty"`
+	Value string `yaml:"value,omitempty"`
 }
 
 var (
