@@ -6,29 +6,36 @@ import (
 	"os"
 )
 
-const helpText = `
-	docker-build is a helper for generating and managing docker-compose files for multiple nodes.
-	The command takes an action as its first argument and optional second and third arguments which modifies the action.
+const helpText = `Usage: docker-build [COMMAND] [arg...]
 
-	Actions:
-		"make": Generates build files to ./build/{build-name}. The second argument should be the build name.
-		"remove": Removes the entire generated build. The second argument should be the build name.
-		"checkout": If a build has been generated, the build's docker-build-{node-name}.yml is generated and placed in the current directory as docker-compose.yaml. The second argument should be the build name. The third argument should be the node name.
-		"clean": Removes the docker-compose.yaml file from the current directory.
-`
+docker-build is a helper for generating and managing docker-compose files for multiple nodes. It has NO association with Docker, Inc. and is provided open-source and as is.
+
+Version: 0.1
+
+Author:
+  Alex Artushin - <https://github.com/artushin>
+
+Commands:
+  make			Generates build files to ./build/{build-name}
+  rm			Removes the generated build
+  checkout		Checkout a specified node in a build as docker-compose.yaml to the current directory
+  clean		 	Removes the docker-compose.yaml file from the current directory`
 
 var (
 	configFile string
 )
 
 func main() {
+	log.SetFlags(0)
+	flag.Parse()
+
 	arg := flag.Arg(0)
 	switch arg {
 	case "make":
 		if build := flag.Arg(1); build != "" {
 			make(build)
 		}
-	case "remove":
+	case "rm":
 		if build := flag.Arg(1); build != "" {
 			remove(build)
 		}
