@@ -29,7 +29,7 @@ func checkout(build, node string) {
 		validation("Invalid build argument:", err.Error())
 	}
 
-	envFile := fmt.Sprintf("%s/docker-compose.env", buildDir)
+	envFile := fmt.Sprintf("%s/docker-build.env", buildDir)
 	_, err := os.Stat(envFile)
 	if os.IsNotExist(err) {
 		envFile = ""
@@ -49,14 +49,14 @@ func checkout(build, node string) {
 
 	b, err := config.build(envFile)
 	if err != nil {
-		validation("Unable to build docker-compose.yaml file:", err.Error())
+		validation("Unable to build docker-compose.yml file:", err.Error())
 	}
 
-	if err := ioutil.WriteFile("docker-compose.yaml", b, 0644); err != nil {
-		validation("Unable to write docker-compose.yaml file:", err.Error())
+	if err := ioutil.WriteFile("docker-compose.yml", b, 0644); err != nil {
+		validation("Unable to write docker-compose.yml file:", err.Error())
 	}
 
-	done("Wrote docker-compose.yaml for build", build, "node", node)
+	done("Wrote docker-compose.yml for build", build, "node", node)
 }
 
 func readNodeConfig(configFile string) (*NodeConfig, error) {
@@ -108,12 +108,14 @@ func (config *NodeConfig) build(envFile string) ([]byte, error) {
 			return nil, err
 		}
 
+		if envFile != "" {
+			b.WriteString("\n  env_file: ")
+			b.WriteString(envFile)
+		}
+
 		if len(container.Links) > 0 {
 			data := map[string]interface{}{
 				"links": container.Links,
-			}
-			if envFile != "" {
-				data["env_file"] = envFile
 			}
 
 			l, err := yaml.Marshal(data)

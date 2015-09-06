@@ -18,8 +18,8 @@ Author:
 Commands:
   make			Generates build files to ./build/{build-name}
   rm			Removes the generated build
-  checkout		Checkout a specified node in a build as docker-compose.yaml to the current directory
-  clean		 	Removes the docker-compose.yaml file from the current directory`
+  checkout		Checkout a specified node in a build as docker-compose.yml to the current directory
+  clean		 	Removes the docker-compose.yml file from the current directory`
 
 var (
 	configFile string

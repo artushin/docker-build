@@ -82,9 +82,9 @@ func execute(cmd string) (string, error) {
 func nodeFile(buildDir, node string) string {
 	var nodeFile string
 	if node == "" {
-		nodeFile = fmt.Sprintf("%s/docker-build.yaml", buildDir)
+		nodeFile = fmt.Sprintf("%s/docker-build.yml", buildDir)
 	} else {
-		nodeFile = fmt.Sprintf("%s/docker-build-%s.yaml", buildDir, node)
+		nodeFile = fmt.Sprintf("%s/docker-build-%s.yml", buildDir, node)
 	}
 	return nodeFile
 }

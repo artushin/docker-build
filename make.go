@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -63,7 +64,7 @@ func make(build string) {
 	envFile := fmt.Sprintf("%s/docker-build.env", dirName)
 	if len(config.Variables) > 0 {
 		if err := ioutil.WriteFile(envFile, envB, 0644); err != nil {
-			validation("Unable to write docker-compose.yaml file:", err.Error())
+			validation("Unable to write docker-build.env file:", err.Error())
 		}
 	}
 
@@ -113,7 +114,7 @@ func (config *BuildConfig) buildEnv() ([]byte, error) {
 	if err != nil {
 		internalError(err)
 	}
-	return b, nil
+	return bytes.Replace(b, []byte(": "), []byte("="), -1), nil
 }
 
 func (config *BuildConfig) buildNodeConfigs() (map[string][]byte, error) {
